@@ -14,6 +14,41 @@ int c;
 bool exist = false;
 
 
+//Function to remove unnecessary literal from the clauses
+set<set<int> > remove(int x , set<set<int> > temp,bool a){
+    set<set<int> > clauses = temp;
+    set<set<int> > to_delete;
+    set<set<int> > in;
+    if(x<0)x=-x;
+    for(auto r : clauses){
+        if( r.count(x)  ){
+            if(a==true)to_delete.insert(r);
+            else {
+                set<int> t = r;
+                t.erase(x);
+                to_delete.insert(r);
+                in.insert(t);
+            }
+        }
+        else if( r.count(-x) !=0 ){
+            if(a==false)to_delete.insert(r);
+            else {
+                set<int> t = r;
+                t.erase(-x);
+                to_delete.insert(r);
+                in.insert(t);
+            }
+        }
+    }
+    for(auto y : to_delete){
+        clauses.erase(y);
+    }
+    for(auto y : in){
+        clauses.insert(y);
+    }
+    return clauses;
+}
+
 int main(int argc, char **argv){
 
     FILE *in_file  = fopen(argv[1], "r");      //Open the cnf file in read only mode
