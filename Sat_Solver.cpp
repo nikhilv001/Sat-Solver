@@ -13,7 +13,6 @@ int n;
 int c;
 bool exist = false;
 
-
 //Function to remove unnecessary literal from the clauses
 set<set<int> > remove(int x , set<set<int> > temp,bool a){
     set<set<int> > clauses = temp;
@@ -48,6 +47,119 @@ set<set<int> > remove(int x , set<set<int> > temp,bool a){
     }
     return clauses;
 }
+
+vector<int> ans;                 //List to store the model ans
+
+//Function implementing the DPLL algorithm
+void solve(vector<int> model,set<set<int> > clauses){
+    if(exist==true)return;          //SAT model already found so return
+
+    if(clauses.size()==0){          //all the clauses have been evaluated to true
+        ans = model;
+        exist = true;
+        return;
+    }
+    else {                          // checking if there exist an empty clause
+                                    //if it exists there can be no answer with the already choosen model
+        for(auto y : clauses){
+            if(y.size()==0){
+                return;
+            }
+        }
+    }
+
+    //now checking for unit literals 
+     
+    for(auto it : clauses ){
+        set<int> y = it;
+        if( y.size()==1){   
+            auto h = y.begin();
+            int g = *h;
+            if(g>0){
+                model[g] = 1;
+                set<set<int> > temp;
+                temp = remove(g,clauses,true);
+                solve(model,temp);
+            }
+            else {
+                g = -g;
+                model[g] = -1;
+                set<set<int > > temp;
+                temp = remove(g,clauses,false);
+                solve(model,temp);
+            }
+            return;
+        }
+    }
+    //ends here
+
+    //now checking for pure literals
+    vector<set<int> > q(n+1);
+    for(auto x : clauses){
+        for( auto y : x){
+            q[abs(y) ].insert(y) ;
+        }
+    }
+    for( int i=1;i<=n;i++){
+        if( q[i].size()==1 ){
+            auto b = q[i].begin();
+            int B = *b;
+            if( B < 0 ){
+                model[i]=-1;
+                set<set<int > > temp;
+                temp = remove(i,clauses,false);
+                solve(model,temp);
+            }
+            else if( B > 0 ){
+                model[i] = 1;
+                set<set<int > > temp;
+                temp = remove(i,clauses,true);
+                solve(model,temp);
+            }
+            return;
+        } 
+    }
+    //ends here
+
+    //To further optimize the solution, we choose the literal with the max frequency in the clauses of min length
+    int min=10000;
+    set<set<int> > optimal;
+    for(auto x : clauses){
+        if(min==x.size()) optimal.insert(x);
+        else if(min > x.size()){
+            optimal.clear();
+            min = x.size();
+            optimal.insert(x);
+        }
+    }
+    vector<int> count(n+1,0);
+    for(auto x : optimal){
+        for(auto y : x){
+            count[abs(y)]++;
+        }
+    }
+    int idx ;
+    int max=-1;
+    for(int i=1;i<=n;i++){
+        if(max < count[i]){
+            max = count[i];
+            idx = i;
+        }
+    }
+    //ends here
+
+    //Backtracking
+    model[idx]=1;
+    set<set<int> > t1,t2;
+    t1 = remove(idx,clauses,true);       //First assume true and then find solution
+    solve(model,t1);
+    if(exist==true)return;
+    model[idx]=-1;
+    t2 = remove(idx,clauses,false);      //Now assume false and then find solution
+    solve(model,t2);
+    return;
+}
+
 
 int main(int argc, char **argv){
 
